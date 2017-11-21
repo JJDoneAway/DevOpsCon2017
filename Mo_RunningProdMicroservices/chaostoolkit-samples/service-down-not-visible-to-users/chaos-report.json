@@ -1,0 +1,189 @@
+{
+  "end": "2017-11-20T14:21:00.797064",
+  "platform": "Linux-4.8.0-58-generic-x86_64-with-LinuxMint-18.2-sonya",
+  "experiment": {
+    "method": [
+      {
+        "probes": {
+          "steady": {
+            "func": "all_microservices_healthy",
+            "layer": "kubernetes",
+            "module": "chaosk8s.probes",
+            "type": "python",
+            "title": "All services must be healthy before we begin"
+          }
+        },
+        "title": "Checking our system is healthy"
+      },
+      {
+        "action": {
+          "func": "kill_microservice",
+          "layer": "kubernetes",
+          "pauses": {
+            "after": 10
+          },
+          "arguments": {
+            "name": "my-provider-service"
+          },
+          "type": "python",
+          "module": "chaosk8s.actions",
+          "title": "Let's stop our provider"
+        },
+        "probes": {
+          "close": {
+            "func": "microservice_is_not_available",
+            "layer": "kubernetes",
+            "arguments": {
+              "name": "my-provider-service"
+            },
+            "type": "python",
+            "module": "chaosk8s.probes",
+            "title": "All services must be healthy before we begin"
+          },
+          "steady": {
+            "func": "microservice_available_and_healthy",
+            "layer": "kubernetes",
+            "arguments": {
+              "name": "my-provider-service"
+            },
+            "type": "python",
+            "module": "chaosk8s.probes",
+            "title": "Before we kill it, our microservice should be alive"
+          }
+        },
+        "title": "Killing the provider abruptly"
+      },
+      {
+        "probes": {
+          "steady": {
+            "layer": "spring",
+            "type": "http",
+            "url": "http://192.168.99.100:31272/invokeConsumedService",
+            "title": "Consume should respond as if nothing"
+          }
+        },
+        "title": "Consumer should not be impacted by provider's failure"
+      }
+    ],
+    "dry": false,
+    "title": "System is resilient to provider's failures",
+    "description": "Can our consumer survive gracefully a provider's failure?"
+  },
+  "run": [
+    {
+      "status": "succeeded",
+      "activity": {
+        "func": "all_microservices_healthy",
+        "layer": "kubernetes",
+        "module": "chaosk8s.probes",
+        "type": "python",
+        "title": "All services must be healthy before we begin"
+      },
+      "output": null,
+      "end": "2017-11-20T14:20:47.311266",
+      "kind": "steady state",
+      "duration": 0.024924,
+      "start": "2017-11-20T14:20:47.286342"
+    },
+    {
+      "status": "succeeded",
+      "activity": {
+        "func": "microservice_available_and_healthy",
+        "layer": "kubernetes",
+        "arguments": {
+          "name": "my-provider-service"
+        },
+        "type": "python",
+        "module": "chaosk8s.probes",
+        "title": "Before we kill it, our microservice should be alive"
+      },
+      "output": null,
+      "end": "2017-11-20T14:20:47.322029",
+      "kind": "steady state",
+      "duration": 0.010621,
+      "start": "2017-11-20T14:20:47.311408"
+    },
+    {
+      "status": "succeeded",
+      "activity": {
+        "func": "kill_microservice",
+        "layer": "kubernetes",
+        "pauses": {
+          "after": 10
+        },
+        "arguments": {
+          "name": "my-provider-service"
+        },
+        "type": "python",
+        "module": "chaosk8s.actions",
+        "title": "Let's stop our provider"
+      },
+      "output": null,
+      "end": "2017-11-20T14:20:47.368797",
+      "kind": "action",
+      "duration": 0.046681,
+      "start": "2017-11-20T14:20:47.322116"
+    },
+    {
+      "status": "failed",
+      "activity": {
+        "func": "microservice_is_not_available",
+        "layer": "kubernetes",
+        "arguments": {
+          "name": "my-provider-service"
+        },
+        "type": "python",
+        "module": "chaosk8s.probes",
+        "title": "All services must be healthy before we begin"
+      },
+      "output": "chaoslib.exceptions.FailedProbe: microservice 'my-provider-service' looks healthy",
+      "end": "2017-11-20T14:20:47.397834",
+      "kind": "close state",
+      "duration": 0.02892,
+      "start": "2017-11-20T14:20:47.368914",
+      "exception": [
+        "Traceback (most recent call last):\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 120, in run_python_activity\n    return func(**arguments)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaosk8s/probes.py\", line 82, in microservice_is_not_available\n    \"microservice '{name}' looks healthy\".format(name=name))\n",
+        "chaoslib.exceptions.FailedProbe: microservice 'my-provider-service' looks healthy\n",
+        "\nDuring handling of the above exception, another exception occurred:\n\n",
+        "Traceback (most recent call last):\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/probe.py\", line 23, in run_probe\n    return run_activity(probe, secrets)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 89, in run_activity\n    return run_python_activity(activity, secrets)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 126, in run_python_activity\n    sys.exc_info()[2])\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 120, in run_python_activity\n    return func(**arguments)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaosk8s/probes.py\", line 82, in microservice_is_not_available\n    \"microservice '{name}' looks healthy\".format(name=name))\n",
+        "chaoslib.exceptions.FailedActivity: chaoslib.exceptions.FailedProbe: microservice 'my-provider-service' looks healthy\n",
+        "\nDuring handling of the above exception, another exception occurred:\n\n",
+        "chaoslib.exceptions.FailedProbe: chaoslib.exceptions.FailedProbe: microservice 'my-provider-service' looks healthy\n"
+      ]
+    },
+    {
+      "status": "failed",
+      "activity": {
+        "layer": "spring",
+        "type": "http",
+        "url": "http://192.168.99.100:31272/invokeConsumedService",
+        "title": "Consume should respond as if nothing"
+      },
+      "output": "{\"timestamp\":1511187660388,\"status\":500,\"error\":\"Internal Server Error\",\"exception\":\"feign.RetryableException\",\"message\":\"connect timed out executing GET http://my-provider-service:8080/\",\"path\":\"/invokeConsumedService\"}",
+      "end": "2017-11-20T14:21:00.797024",
+      "kind": "steady state",
+      "duration": 13.399032,
+      "start": "2017-11-20T14:20:47.397992",
+      "exception": [
+        "Traceback (most recent call last):\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/probe.py\", line 23, in run_probe\n    return run_activity(probe, secrets)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 93, in run_activity\n    return run_http_activity(activity, secrets)\n",
+        "  File \"/home/johannes/.venvs/chaostk/lib/python3.5/site-packages/chaoslib/activity.py\", line 190, in run_http_activity\n    raise FailedActivity(r.text)\n",
+        "chaoslib.exceptions.FailedActivity: {\"timestamp\":1511187660388,\"status\":500,\"error\":\"Internal Server Error\",\"exception\":\"feign.RetryableException\",\"message\":\"connect timed out executing GET http://my-provider-service:8080/\",\"path\":\"/invokeConsumedService\"}\n",
+        "\nDuring handling of the above exception, another exception occurred:\n\n",
+        "chaoslib.exceptions.FailedProbe: {\"timestamp\":1511187660388,\"status\":500,\"error\":\"Internal Server Error\",\"exception\":\"feign.RetryableException\",\"message\":\"connect timed out executing GET http://my-provider-service:8080/\",\"path\":\"/invokeConsumedService\"}\n"
+      ]
+    }
+  ],
+  "node": "johannes-ThinkPad",
+  "chaoslib-version": "0.4.0",
+  "duration": 13.511352777481079,
+  "start": "2017-11-20T14:20:47.286132"
+}
