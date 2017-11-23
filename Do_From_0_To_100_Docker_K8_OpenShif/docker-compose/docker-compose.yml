@@ -1,0 +1,21 @@
+version: '2'
+services:
+ wordpress:
+  image: wordpress
+  ports:
+   - 81:80
+  depends_on:
+   - mysql
+  volumes:
+   - wordpress-storage:/var/www/html
+ mysql:
+  image: mysql
+  environment:
+   - MYSQL_ROOT_PASSWORD=my-secret-pw
+  volumes:
+   - mysql-storage:/var/lin/mysql
+volumes:
+ wordpress-storage:
+  external: true
+ mysql-storage:
+  external: true
